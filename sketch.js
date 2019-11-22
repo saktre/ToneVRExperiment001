@@ -7,10 +7,15 @@ var cat;
 var b;
 var ground;
 
+var guitar;
+var guitarContainer;
 
 // pokeball Container
 var pokeBallContainer
 var projectiles = []
+
+
+var targets = []
 
 var synth = new Tone.Synth().toMaster()
 
@@ -51,32 +56,31 @@ function setup() {
 
 	container.addChild(b)
 
-// Ground Plane for drawing
-// create a plane to serve as our "ground"
-ground = new Plane({
-					x:0, y:0, z:0,
-					width:100, height:100,
-					asset: 'brick',
-					repeatX: 100,
-					repeatY: 100,
-					rotationX:-90, metalness:0.25
-					 });
+	// Ground Plane for drawing
+	// create a plane to serve as our "ground"
+	ground = new Plane({
+						x:0, y:0, z:0,
+						width:100, height:100,
+						asset: 'brick',
+						repeatX: 100,
+						repeatY: 100,
+						rotationX:-90, metalness:0.25
+						 });
 
-world.add(ground)
+	world.add(ground)
 
 
-// Cat Container
+	pokeBallContainer = new Container3D({
+		x:3, y:1.5, z:0
 
-pokeBallContainer = new Container3D({
-	x:3, y:1.5, z:0
-
-})
+	})
 
 var b2 = new Box({
 	x:0,y:0,z:0,
-	opacity:1,
+	opacity:0.4,
 	clickFunction:function(theContainer){
 		world.slideToObject(pokeBallContainer,1000)
+		world.add(cat)
 	}
 })
 
@@ -98,11 +102,24 @@ pokeBallContainer.addChild(b2);
 pokeBallContainer.addChild(item);
 
 world.add(pokeBallContainer)
-world.add(cat)
+// world.add(cat)
 
 
+// Lets add a guitar to the WORLD
 
 
+guitarContainer = new Container3D({
+	x:0,y:0.5,z:4
+});
+
+guitar = new OBJ({
+	x:0,y:0,z:0,
+	mtl:'guitarMtl',
+	asset:"guitarObj"
+});
+
+guitarContainer.addChild(guitar);
+world.add(guitarContainer);
 
 
 
@@ -137,22 +154,22 @@ function draw() {
 
 // FOr loop to through the pokeball projectilePosition
 
-for (var i = 0; i < projectiles.length; i++) {
-	projectiles[i].move();
+	for (var i = 0; i < projectiles.length; i++) {
+		projectiles[i].move();
 
-	// get WORLD position for this projectile
-	var projectilePosition = projectiles[i].myCube.getWorldPosition();
+		// get WORLD position for this projectile
+		var projectilePosition = projectiles[i].myCube.getWorldPosition();
 
-	// did the projectile go off the screen? if so, just remove it and move into the next one
-	if (projectilePosition.x > 50 || projectilePosition.x < -50 || projectilePosition.z > 50 || projectilePosition.z < -50) {
-		world.remove(projectiles[i].myContainer);
-		projectiles.splice(i, 1);
-		i--;
-		continue;
+		// did the projectile go off the screen? if so, just remove it and move into the next one
+		if (projectilePosition.x > 50 || projectilePosition.x < -50 || projectilePosition.z > 50 || projectilePosition.z < -50) {
+			world.remove(projectiles[i].myContainer);
+			projectiles.splice(i, 1);
+			i--;
+			continue;
+		}
+
+
 	}
-
-
-}
 
 
 }
@@ -169,6 +186,7 @@ class Projectile {
 		var userPosition = world.getUserPosition();
 		var userRotation = world.getUserRotation();
 
+		this.movingState = 0
 // Container for the projectile
 		this.myContainer = new Container3D({
 			x: userPosition.x,
@@ -194,15 +212,29 @@ class Projectile {
 			green:random(255)
 		});
 
+		this.myPokeball = new OBJ({
+			x:0,y:0,z:0,
+			mtl:'itemMtl',
+			asset:'itemObj'
+		})
+
 		// add the assset to the container (not the world!)
-		this.myContainer.addChild(this.myCube);
+		// this.myContainer.addChild(this.myCube);
+		this.myContainer.addChild(this.myPokeball)
+
 	}
 
 	// our move function
 	move() {
-		// easy peasy - the projectile just moves along the z-axis by a certain amount
-		// because it's been placed into a container that is already rotated correctly
-		// we don't need to deal with any fancy math here
-		this.myCube.nudge(0,0,-0.02);
+
+		if (this.movingState == 0){
+			this.myPokeball.nudge(0,-0.02,-0.1);
+
+		}
+
+		if (this.movingState == 1){
+			console.log("stopped moving")
+		}
+
 	}
 }
